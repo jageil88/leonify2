@@ -1,47 +1,25 @@
 name: Build Leonify APK
-
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
-
+  push:
+    branches:
+      - main
 jobs:
   build:
     runs-on: ubuntu-22.04
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Python 3.10
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev libltdl-dev
-
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          pip install buildozer==1.5.0 cython==0.29.33
-
-      - name: Build APK
+      - name: deps
+        run: sudo apt-get update && sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libffi-dev libssl-dev cmake
+      - name: pip
+        run: pip install buildozer==1.5.0 cython==0.29.33
+      - name: build
         run: buildozer android debug
         timeout-minutes: 60
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: leonify-apk
           path: bin/*.apk
-          if-no-files-found: error
-
-      - name: Upload log on failure
-        if: failure()
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-log
-          path: "*.log"
